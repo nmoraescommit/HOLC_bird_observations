@@ -1,20 +1,348 @@
 ---
 title: "Homework Assignment #2"
 subtitle: "Exploring patterns of environmental justice"
-author: "UPDATE WITH YOUR NAME"
+author: "Naomi Moraes"
 date: last-modified
 execute: 
-  eval: false
+  eval: true
 format:
   html:
+    code-fold: true
+    code-summary: "Show the code"
     toc: true
 editor_options: 
   chunk_output_type: console
+  echo: false
+warning: false
+message: false
 ---
+
+## Import Libraries
+
+```{r}
+# load libraries for Part 1 and Part 2
+library(here)
+library(sf)
+library(tmap)
+library(terra)
+library(tidyverse)
+library(kableExtra)
+library(testthat)
+library(ggplot2)
+```
+
+## Read in Data
+
+```{r}
+# Read in data
+ejscreen <- sf::read_sf(here::here("data", "ejscreen","EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"))
+
+HOLC_grade <- sf::read_sf(here("data", "mapping-inequality","mapping-inequality-los-angeles.json"))
+  
+bird_observations <- sf::read_sf(here::here("data","gbif-birds-LA","gbif-birds-LA.shp"))
+```
 
 ## Part 1: Legacy of redlining in current environmental (in)justice
 
+#### Data Processing
+
+```{r}
+# Use if statement and warning to screen CRS of dataframes
+if(st_crs(HOLC_grade) != st_crs(ejscreen)){
+  warning("These CRS are not equivalent! They will be transformed in this process:")
+  HOLC_grade_fix <- st_transform(x = HOLC_grade, crs = st_crs(ejscreen))
+}else{
+  print("These CRS are equivalent - proceed to next step.")
+}
+
+# Check equivalence CRS of HOLC_grade_fix and ejscreen
+expect_equal(st_crs(ejscreen), st_crs(HOLC_grade_fix))
+
+# US states for reference map
+USA_base <- ejscreen %>%
+            filter(ST_ABBREV %in% c("OR", "CA", "NV", "AZ"))
+  
+USA_base <- aggregate(ejscreen, by = list(ejscreen$ST_ABBREV), FUN = mean)
+
+# Filter to all counties in CA
+california <- ejscreen %>%
+              filter(ST_ABBREV == "CA")
+
+# Find the average values for all variables within counties, to fill CA base map
+california_counties <- aggregate(california, by = list(california$CNTY_NAME), FUN = mean)
+ 
+# Create Los Angeles county reference
+LA_county <- california_counties %>%
+            filter(Group.1 == "Los Angeles County")
+
+# Create Los Angeles base map for smaller map
+LA_base <- california %>%
+            filter(CNTY_NAME %in% c('Los Angeles County','Ventura County','Orange County', 'San Bernardino County'))
+ 
+# Make HOLC and LA geometries are valid
+HOLC_grade_fix <- st_make_valid(HOLC_grade_fix)
+LA_base <- st_make_valid(LA_base)
+
+# Create bbox for smaller map
+bbox_example <- st_bbox(c(xmin = -13245000,
+                        ymin = 3970000,
+                        xmax = -13101000,
+                        ymax = 4070000),
+                        crs = st_crs(HOLC_grade_fix)) %>%
+                st_as_sfc()
+```
+
+#### Maps
+
+```{r}
+# CA map with reference
+CA_map_ref <- tm_shape(st_as_sfc(st_bbox(california_counties))) +
+                tm_polygons(col = "aliceblue") +
+              tm_shape(USA_base) +
+                tm_polygons(col = "lemonchiffon2") +
+              tm_shape(california_counties) + 
+                tm_polygons(col = "darkseagreen1")+
+              tm_shape(LA_county)+
+                tm_polygons(col = "darkgreen") +
+              tm_shape(st_as_sf(bbox_example)) +
+                tm_polygons(col = "hotpink1",
+                          alpha = 0.4) +
+             tm_layout(main.title = "Los Angeles County and Redlined Area Reference",
+                       main.title.position = 0.0,
+                       main.title.size = 1,
+                       frame = TRUE,
+                       frame.lwd = 3,
+                       legend.outside = TRUE) +
+              tm_scale_bar(position = c(0.05,0.05)) +
+              tm_compass(show.labels = 1, 
+                          position = c(0.05, 0.2))
+              
+CA_map_ref
+```
+
+```{r}
+# Color HOLC grade
+HOLC_map <- tm_shape(bbox_example)+
+  tm_polygons(col = "lightsteelblue1")+
+  tm_shape(LA_base) +
+  tm_polygons(col = '#FDE6C9',
+              lwd = 0.3)+
+tm_shape(HOLC_grade_fix) +
+  tm_polygons('grade',
+              title = "HOLC Grade",
+              palette = c(
+                "A" = "darkolivegreen3",
+                "B" = "lightskyblue",
+                "C" = "gold",
+                "D" = "tomato",
+                "Missing" = 'white'))+
+  tm_layout(main.title = "Los Angeles County and HOLC Grade Designations",
+            main.title.position = 0.0,
+            main.title.size = 1,
+            frame = TRUE,
+            frame.lwd = 3,
+            legend.outside = TRUE)+
+  tm_legend(bg.alpha = 0.6,
+            title.size = 0.65,
+            bg.color = "ivory",
+            frame = TRUE) +
+  tm_scale_bar(position = c(0.05,0.05)) +
+  tm_compass(show.labels = 1, 
+             position = c(0.03, 0.2))
+  
+HOLC_map
+```
+
+#### Figures
+
+```{r}
+# Table summarizing the percent of current census block groups within each HOLC grade
+HOLC_block <- st_join(LA_base, HOLC_grade_fix, join = st_intersects, left = FALSE)
+
+# Create table with percentages for each HOLC grade
+HOLC_percent <- HOLC_block %>%
+  group_by(grade) %>%
+  drop_na(grade) %>%
+  summarise(count = n())  %>%
+  mutate(percent = (count/sum(count))*100) %>%
+  select(-count) %>%
+  st_drop_geometry()
+
+# Check to see if percentages equal 100%
+if((expect_equal(sum(HOLC_percent$percent),100) == 100)){
+  print("These percentages are good to go! They add up to 100%")
+}else{
+  stop("Double check percentages! These do not add up to 100%.")
+}
+
+# Table
+HOLC_percent_table <- kable(HOLC_percent, caption = "Summarizing the percent of current census block groups within each HOLC grade")
+
+HOLC_percent_table
+```
+
+```{r}
+# Filter joined HOLC Grade and EJscreen Census data to relevant variables
+HOLC_block_filter <- HOLC_block %>%
+                  filter(grade == c('A','B','C','D')) %>%
+                  mutate(P_LIFEEXPPCT = replace_na(P_LIFEEXPPCT,0)) %>%
+                  mutate(LOWINCPCT = (LOWINCPCT*100)) %>%
+                  select(grade,LOWINCPCT, P_PM25, P_LIFEEXPPCT)
+
+# Aggregate mean values of filtered data
+HOLC_block_filter <- aggregate(HOLC_block_filter, by = list(HOLC_block_filter$grade),
+                               FUN = mean) %>%
+                    select(Group.1, LOWINCPCT, P_PM25, P_LIFEEXPPCT)
+```
+
+```{r}
+# Create low income % bar plot
+lowincpct_bar <- ggplot(data = HOLC_block_filter, aes(x = Group.1, y = LOWINCPCT, fill = Group.1)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("darkolivegreen3", "lightskyblue", 'gold',"tomato"))+
+  xlab("HOLC Grade Designations") +
+  ylab("Mean Percent Low Income (%)") +
+  labs(fill = "HOLC Grades")+
+  theme_bw()+
+  ggtitle("Relationship between Mean Percent Low Income (%) 
+          and HOLC Grade Designations") +
+  theme(plot.title = element_text(size = 12, face = 'bold'))
+
+lowincpct_bar
+
+# Create PM25 percentile bar plot
+p_pm25_bar <- ggplot(data = HOLC_block_filter, aes(x = Group.1, y = P_PM25, fill = Group.1)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("darkolivegreen3", "lightskyblue", 'gold',"tomato"))+
+  xlab("HOLC Grade Designations") +
+  ylab("Mean Percentile for Particulate Matter 2.5 (percentile)") +
+  labs(fill = "HOLC Grades")+
+  theme_bw()+
+  ggtitle("Relationship between Mean Percentile for PM 2.5 
+          and HOLC Grade Designations") +
+  theme(plot.title = element_text(size = 12, face = 'bold'))
+
+p_pm25_bar
+
+# Create life expectancy percentile bar plot
+p_lifeexppct_bar <- ggplot(data = HOLC_block_filter, aes(x = Group.1, y = P_LIFEEXPPCT, fill = Group.1)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("darkolivegreen3", "lightskyblue", 'gold',"tomato"))+
+  xlab("HOLC Grade Designations") +
+  ylab("Mean Percentile for Low Life Expectancy (percentile)") +
+  labs(fill = "HOLC Grades")+
+  theme_bw()+
+  ggtitle("Relationship between Mean Percentile for Low Life Expectancy 
+          and HOLC Grade Designations") +
+  theme(plot.title = element_text(size = 12, face = 'bold'))
+
+p_lifeexppct_bar
+```
+
+#### Results Discussion
+
+Through the data analysis, exploration and visualization for the means of the percent low income, percentile for particulate matter 2.5 and percentile for low life expectancy (in the HOLC graded areas in Los Angeles County), I have observed patterns in the data. In the means of all variables - the HOLC areas with a grade designation of D, were higher than the others. (However further statistical analysis must be done - in order to conclude if these differences are statistically significant.) Variables like low income and higher percentile particulate matter 2.5, may have a correlative impact on the percentile for low life expectancy. The EJ Screen demographic indicators were taken using the Census Bureau 2017 - 2021 5-year summary, whereas the particulate matter data was derived from the 2019 EPA source data.
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
+##### Data Processing
 
+```{r}
+# Use if statement and warning to screen CRS of dataframes
+if(st_crs(bird_observations) != st_crs(HOLC_grade_fix)){
+  warning("These CRS are not equivalent! They will be transformed shortly...:")
+  bird_observations_fix <- st_transform(x = bird_observations, crs = st_crs(HOLC_grade_fix))
+}else{
+  print("These CRS are equivalent - proceed to next step.")
+}
+
+# Check equivalence CRS of HOLC_grade and ejscreen
+expect_equal(st_crs(bird_observations_fix), st_crs(HOLC_grade_fix))
+
+# Make birds_observations_fix valid
+bird_observations_fix <- st_make_valid(bird_observations_fix)
+
+# Filter to 2022 observations
+bird_observations_fix <- bird_observations_fix %>%
+                        filter(year == 2022)
+```
+
+#### Figures
+
+```{r}
+
+# Use if statement and warning to screen CRS of dataframes
+if(st_crs(bird_observations) != st_crs(HOLC_grade_fix)){
+  warning("These CRS are not equivalent! They will be transformed shortly...:")
+  bird_observations_fix <- st_transform(x = bird_observations, crs = st_crs(HOLC_grade_fix))
+}else{
+  print("These CRS are equivalent - proceed to next step.")
+}
+
+# Check equivalence CRS of HOLC_grade and ejscreen
+expect_equal(st_crs(bird_observations_fix), st_crs(HOLC_grade_fix))
+
+# Make birds_observations_fix valid
+bird_observations_fix <- st_make_valid(bird_observations_fix)
+
+# Filter to 2022 observations
+bird_observations_fix <- bird_observations_fix %>%
+                        filter(year == 2022)
+
+# Df summarizing the percent of bird observations within each HOLC grade
+HOLC_birds <- st_join(bird_observations_fix, HOLC_grade_fix, join = st_intersects, left = FALSE)
+
+# Create df with percentages for each HOLC grade
+HOLC_birds_percent <- HOLC_birds %>%
+  group_by(grade) %>%
+  drop_na(grade) %>%
+  summarise(count = n())  %>%
+  mutate(percent = (count/sum(count))*100) %>%
+  select(-count) %>%
+  st_drop_geometry()
+
+# Check to see if percentages equal 100%
+expect_equal(sum(HOLC_birds_percent$percent), 100)
+
+# Df of bird observations by count
+HOLC_birds_count <- HOLC_birds %>%
+                      filter(grade != 'NA') %>%
+                      group_by(grade) %>%
+                      summarise(count = n()) %>%
+                      st_drop_geometry()
+```
+
+```{r}
+# Bar plot - Bird Observations by Percent
+birds_bar <- ggplot(data = HOLC_birds_percent, aes(x = grade, y = percent)) +
+                  geom_bar(stat = "identity",
+                           aes(fill = grade)) +
+  scale_fill_manual(values=c("darkolivegreen3", "lightskyblue", 'gold',"tomato"))+
+  xlab("HOLC Grade Designations") +
+  ylab("Percent of Bird Observations (%)") +
+  labs(fill = "HOLC Grade")+
+  theme_bw() +
+  ggtitle("Relationship between Percent of Bird Observations 
+          and HOLC Grade Designations (2022)") +
+  theme(plot.title = element_text(size = 12, face = 'bold'))
+
+birds_bar
+
+# Table
+HOLC_birds_percent_table <- kable(HOLC_birds_count, caption = "Summarizing the count of observations within redlined neighborhoods within each HOLC grade (2022)")
+
+HOLC_birds_percent_table
+```
+
+#### Results Discussion
+
+From the table and visualized bar plot above, we notice that there are the highest percent of bird observations, within the redlined neighborhoods in 2022, in the "C" designated area (with observations slightly greater than 35% of the total). This is followed by the "D" (with close to 30%), than "B" (close to 20%), and "A" (slightly above 15%). This finding does require further analysis and study - as there may be confounding variables like the size of the area that each grade contains relative to the number of observations. (With this factor taken into account - we might expect to see a greater proportion of the observations actually take place in the "A" and "B" areas. This is because they are more likely to be wealthier, more "scientifically visible" areas.)
+
+## Citations
+
+| Data                                                             | Citations                                                                                                                                                          | URL                                                   |
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| EJScreen Technical Documentation                                 | U.S. Environmental Protection Agency (EPA), 2023. EJScreen Technical Documentation.                                                                                |                                                       |
+| EJScreen Data                                                    | U.S. Environmental Protection Agency (EPA). (2024, August 6). Download EJScreen Data. US EPA.                                                                      | <https://www.epa.gov/ejscreen/download-ejscreen-data> |
+| HOLC Redlining Data                                              | Nelson, R. K., Winling, L, et al. (2023). Mapping Inequality: Redlining in New Deal America. Digital Scholarship Lab. https://dsl.richmond.edu/panorama/redlining. | <https://dsl.richmond.edu/panorama/redlining/data>    |
+| Bird Observation Data - Global Biodiversity Information Facility | Relevant data from this taken from: <https://drive.google.com/file/d/14CauXFZkVh_6z2Euq0m1Sq1kHQ31fiMk/view>                                                       | <https://www.gbif.org>                                |
