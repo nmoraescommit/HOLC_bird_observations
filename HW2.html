@@ -158,6 +158,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="part-1-legacy-of-redlining-in-current-environmental-injustice">Part 1: Legacy of redlining in current environmental (in)justice</h2>
 <section id="data-processing" class="level4">
 <h4 class="anchored" data-anchor-id="data-processing">Data Processing</h4>
+<section id="crs-testing" class="level5">
+<h5 class="anchored" data-anchor-id="crs-testing">CRS Testing</h5>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -167,79 +169,87 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  HOLC_grade_fix <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(<span class="at">x =</span> HOLC_grade, <span class="at">crs =</span> <span class="fu">st_crs</span>(ejscreen))</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}<span class="cf">else</span>{</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"These CRS are equivalent - proceed to next step."</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check equivalence CRS of HOLC_grade_fix and ejscreen</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">st_crs</span>(ejscreen), <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># US states for reference map</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>USA_base <span class="ot">&lt;-</span> ejscreen <span class="sc">%&gt;%</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(ST_ABBREV <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"OR"</span>, <span class="st">"CA"</span>, <span class="st">"NV"</span>, <span class="st">"AZ"</span>))</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>USA_base <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(ejscreen, <span class="at">by =</span> <span class="fu">list</span>(ejscreen<span class="sc">$</span>ST_ABBREV), <span class="at">FUN =</span> mean)</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to all counties in CA</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>california <span class="ot">&lt;-</span> ejscreen <span class="sc">%&gt;%</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>              <span class="fu">filter</span>(ST_ABBREV <span class="sc">==</span> <span class="st">"CA"</span>)</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the average values for all variables within counties, to fill CA base map</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>california_counties <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(california, <span class="at">by =</span> <span class="fu">list</span>(california<span class="sc">$</span>CNTY_NAME), <span class="at">FUN =</span> mean)</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Los Angeles county reference</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>LA_county <span class="ot">&lt;-</span> california_counties <span class="sc">%&gt;%</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(Group<span class="fl">.1</span> <span class="sc">==</span> <span class="st">"Los Angeles County"</span>)</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Los Angeles base map for smaller map</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>LA_base <span class="ot">&lt;-</span> california <span class="sc">%&gt;%</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(CNTY_NAME <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">'Los Angeles County'</span>,<span class="st">'Ventura County'</span>,<span class="st">'Orange County'</span>, <span class="st">'San Bernardino County'</span>))</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Make HOLC and LA geometries are valid</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>HOLC_grade_fix <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(HOLC_grade_fix)</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>LA_base <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(LA_base)</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create bbox for smaller map</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>bbox_example <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(<span class="fu">c</span>(<span class="at">xmin =</span> <span class="sc">-</span><span class="dv">13245000</span>,</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>                        <span class="at">ymin =</span> <span class="dv">3970000</span>,</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                        <span class="at">xmax =</span> <span class="sc">-</span><span class="dv">13101000</span>,</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>                        <span class="at">ymax =</span> <span class="dv">4070000</span>),</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                        <span class="at">crs =</span> <span class="fu">st_crs</span>(HOLC_grade_fix)) <span class="sc">%&gt;%</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>                <span class="fu">st_as_sfc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
+<section id="filter-and-create-variables" class="level5">
+<h5 class="anchored" data-anchor-id="filter-and-create-variables">Filter and Create Variables</h5>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check equivalency of CRS of HOLC_grade_fix and ejscreen</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">st_crs</span>(ejscreen), <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># US states for reference map</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>USA_base <span class="ot">&lt;-</span> ejscreen <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(ST_ABBREV <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"OR"</span>, <span class="st">"CA"</span>, <span class="st">"NV"</span>, <span class="st">"AZ"</span>))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>USA_base <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(ejscreen, <span class="at">by =</span> <span class="fu">list</span>(ejscreen<span class="sc">$</span>ST_ABBREV), <span class="at">FUN =</span> mean)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to all counties in CA</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>california <span class="ot">&lt;-</span> ejscreen <span class="sc">%&gt;%</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>              <span class="fu">filter</span>(ST_ABBREV <span class="sc">==</span> <span class="st">"CA"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the average values for all variables within counties, to fill CA base map</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>california_counties <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(california, <span class="at">by =</span> <span class="fu">list</span>(california<span class="sc">$</span>CNTY_NAME), <span class="at">FUN =</span> mean)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Los Angeles county reference</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>LA_county <span class="ot">&lt;-</span> california_counties <span class="sc">%&gt;%</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(Group<span class="fl">.1</span> <span class="sc">==</span> <span class="st">"Los Angeles County"</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Los Angeles base map for smaller map</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>LA_base <span class="ot">&lt;-</span> california <span class="sc">%&gt;%</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(CNTY_NAME <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">'Los Angeles County'</span>,<span class="st">'Ventura County'</span>,<span class="st">'Orange County'</span>, <span class="st">'San Bernardino County'</span>))</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Make HOLC and LA geometries are valid</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>HOLC_grade_fix <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(HOLC_grade_fix)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>LA_base <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(LA_base)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Create bbox for smaller map</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>bbox_example <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(<span class="fu">c</span>(<span class="at">xmin =</span> <span class="sc">-</span><span class="dv">13245000</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>                        <span class="at">ymin =</span> <span class="dv">3970000</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>                        <span class="at">xmax =</span> <span class="sc">-</span><span class="dv">13101000</span>,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>                        <span class="at">ymax =</span> <span class="dv">4070000</span>),</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>                        <span class="at">crs =</span> <span class="fu">st_crs</span>(HOLC_grade_fix)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>                <span class="fu">st_as_sfc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
 </section>
 <section id="maps" class="level4">
 <h4 class="anchored" data-anchor-id="maps">Maps</h4>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CA map with reference</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>CA_map_ref <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(<span class="fu">st_as_sfc</span>(<span class="fu">st_bbox</span>(california_counties))) <span class="sc">+</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"aliceblue"</span>) <span class="sc">+</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(USA_base) <span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"lemonchiffon2"</span>) <span class="sc">+</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(california_counties) <span class="sc">+</span> </span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"darkseagreen1"</span>)<span class="sc">+</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(LA_county)<span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"darkgreen"</span>) <span class="sc">+</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(<span class="fu">st_as_sf</span>(bbox_example)) <span class="sc">+</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"hotpink1"</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                          <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>             <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Los Angeles County and Redlined Area Reference"</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                       <span class="at">main.title.position =</span> <span class="fl">0.0</span>,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                       <span class="at">main.title.size =</span> <span class="dv">1</span>,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                       <span class="at">frame =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                       <span class="at">frame.lwd =</span> <span class="dv">3</span>,</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                       <span class="at">legend.outside =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_scale_bar</span>(<span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>,<span class="fl">0.05</span>)) <span class="sc">+</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_compass</span>(<span class="at">show.labels =</span> <span class="dv">1</span>, </span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>                          <span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.2</span>))</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>              </span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>CA_map_ref</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CA map for reference</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>CA_map_ref <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(<span class="fu">st_as_sfc</span>(<span class="fu">st_bbox</span>(california_counties))) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"aliceblue"</span>) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(USA_base) <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"lemonchiffon2"</span>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(california_counties) <span class="sc">+</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"darkseagreen1"</span>)<span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(LA_county)<span class="sc">+</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"darkgreen"</span>) <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_shape</span>(<span class="fu">st_as_sf</span>(bbox_example)) <span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"hotpink1"</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                          <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>             <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Los Angeles County and Redlined Area Reference"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                       <span class="at">main.title.position =</span> <span class="fl">0.0</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                       <span class="at">main.title.size =</span> <span class="dv">1</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                       <span class="at">frame =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                       <span class="at">frame.lwd =</span> <span class="dv">3</span>,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                       <span class="at">legend.outside =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_scale_bar</span>(<span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>,<span class="fl">0.05</span>)) <span class="sc">+</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_compass</span>(<span class="at">show.labels =</span> <span class="dv">1</span>, </span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>                          <span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.2</span>))</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>              </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>CA_map_ref</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -247,41 +257,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Color HOLC grade</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>HOLC_map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bbox_example)<span class="sc">+</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"lightsteelblue1"</span>)<span class="sc">+</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(LA_base) <span class="sc">+</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">'#FDE6C9'</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">lwd =</span> <span class="fl">0.3</span>)<span class="sc">+</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(HOLC_grade_fix) <span class="sc">+</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="st">'grade'</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">title =</span> <span class="st">"HOLC Grade"</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">palette =</span> <span class="fu">c</span>(</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"A"</span> <span class="ot">=</span> <span class="st">"darkolivegreen3"</span>,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">"B"</span> <span class="ot">=</span> <span class="st">"lightskyblue"</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                <span class="st">"C"</span> <span class="ot">=</span> <span class="st">"gold"</span>,</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">"D"</span> <span class="ot">=</span> <span class="st">"tomato"</span>,</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Missing"</span> <span class="ot">=</span> <span class="st">'white'</span>))<span class="sc">+</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Los Angeles County and HOLC Grade Designations"</span>,</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">main.title.position =</span> <span class="fl">0.0</span>,</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">main.title.size =</span> <span class="dv">1</span>,</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame.lwd =</span> <span class="dv">3</span>,</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.outside =</span> <span class="cn">TRUE</span>)<span class="sc">+</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_legend</span>(<span class="at">bg.alpha =</span> <span class="fl">0.6</span>,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">title.size =</span> <span class="fl">0.65</span>,</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">bg.color =</span> <span class="st">"ivory"</span>,</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_scale_bar</span>(<span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>,<span class="fl">0.05</span>)) <span class="sc">+</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_compass</span>(<span class="at">show.labels =</span> <span class="dv">1</span>, </span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>             <span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.03</span>, <span class="fl">0.2</span>))</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>HOLC_map</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Color HOLC grade</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>HOLC_map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bbox_example)<span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"lightsteelblue1"</span>)<span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(LA_base) <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">'#FDE6C9'</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">lwd =</span> <span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(HOLC_grade_fix) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="st">'grade'</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">title =</span> <span class="st">"HOLC Grade"</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">palette =</span> <span class="fu">c</span>(</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"A"</span> <span class="ot">=</span> <span class="st">"darkolivegreen3"</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">"B"</span> <span class="ot">=</span> <span class="st">"lightskyblue"</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                <span class="st">"C"</span> <span class="ot">=</span> <span class="st">"gold"</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">"D"</span> <span class="ot">=</span> <span class="st">"tomato"</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Missing"</span> <span class="ot">=</span> <span class="st">'white'</span>))<span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Los Angeles County and HOLC Grade Designations"</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">main.title.position =</span> <span class="fl">0.0</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">main.title.size =</span> <span class="dv">1</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame.lwd =</span> <span class="dv">3</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.outside =</span> <span class="cn">TRUE</span>)<span class="sc">+</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_legend</span>(<span class="at">bg.alpha =</span> <span class="fl">0.6</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">title.size =</span> <span class="fl">0.65</span>,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">bg.color =</span> <span class="st">"ivory"</span>,</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">frame =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_scale_bar</span>(<span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.05</span>,<span class="fl">0.05</span>)) <span class="sc">+</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_compass</span>(<span class="at">show.labels =</span> <span class="dv">1</span>, </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>             <span class="at">position =</span> <span class="fu">c</span>(<span class="fl">0.03</span>, <span class="fl">0.2</span>))</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>HOLC_map</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -292,34 +302,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Table summarizing the percent of current census block groups within each HOLC grade</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>HOLC_block <span class="ot">&lt;-</span> <span class="fu">st_join</span>(LA_base, HOLC_grade_fix, <span class="at">join =</span> st_intersects, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create table with percentages for each HOLC grade</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>HOLC_percent <span class="ot">&lt;-</span> HOLC_block <span class="sc">%&gt;%</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(grade) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>())  <span class="sc">%&gt;%</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percent =</span> (count<span class="sc">/</span><span class="fu">sum</span>(count))<span class="sc">*</span><span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>count) <span class="sc">%&gt;%</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>()</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Check to see if percentages equal 100%</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>((<span class="fu">expect_equal</span>(<span class="fu">sum</span>(HOLC_percent<span class="sc">$</span>percent),<span class="dv">100</span>) <span class="sc">==</span> <span class="dv">100</span>)){</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"These percentages are good to go! They add up to 100%"</span>)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>}<span class="cf">else</span>{</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"Double check percentages! These do not add up to 100%."</span>)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Join df of LA census blocks as well as HOLC areas</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>HOLC_block <span class="ot">&lt;-</span> <span class="fu">st_join</span>(LA_base, HOLC_grade_fix, <span class="at">join =</span> st_intersects, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create df with percentages for each HOLC grade, drop NA as not included in HOLC grading system</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>HOLC_percent <span class="ot">&lt;-</span> HOLC_block <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">drop_na</span>(grade) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>())  <span class="sc">%&gt;%</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">percent =</span> (count<span class="sc">/</span><span class="fu">sum</span>(count))<span class="sc">*</span><span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">select</span>(<span class="sc">-</span>count) <span class="sc">%&gt;%</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">st_drop_geometry</span>()</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter joined HOLC Grade and EJscreen Census data to relevant variables</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>HOLC_block_filter <span class="ot">&lt;-</span> HOLC_block <span class="sc">%&gt;%</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">filter</span>(grade <span class="sc">==</span> <span class="fu">c</span>(<span class="st">'A'</span>,<span class="st">'B'</span>,<span class="st">'C'</span>,<span class="st">'D'</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">mutate</span>(<span class="at">P_LIFEEXPPCT =</span> <span class="fu">replace_na</span>(P_LIFEEXPPCT,<span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">mutate</span>(<span class="at">LOWINCPCT =</span> (LOWINCPCT<span class="sc">*</span><span class="dv">100</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">select</span>(grade,LOWINCPCT, P_PM25, P_LIFEEXPPCT)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Aggregate mean values of filtered data</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>HOLC_block_filter <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(HOLC_block_filter, <span class="at">by =</span> <span class="fu">list</span>(HOLC_block_filter<span class="sc">$</span>grade),</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                               <span class="at">FUN =</span> mean) <span class="sc">%&gt;%</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">select</span>(Group<span class="fl">.1</span>, LOWINCPCT, P_PM25, P_LIFEEXPPCT)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Check to see if percentages equal 100%</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>((<span class="fu">expect_equal</span>(<span class="fu">sum</span>(HOLC_percent<span class="sc">$</span>percent),<span class="dv">100</span>) <span class="sc">==</span> <span class="dv">100</span>)){</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"These percentages are good to go! They add up to 100%"</span>)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>}<span class="cf">else</span>{</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"Double check percentages! These do not add up to 100%."</span>)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "These percentages are good to go! They add up to 100%"</code></pre>
 </div>
+</div>
+<section id="table" class="level5">
+<h5 class="anchored" data-anchor-id="table">Table</h5>
+<div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Table</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>HOLC_percent_table <span class="ot">&lt;-</span> <span class="fu">kable</span>(HOLC_percent, <span class="at">caption =</span> <span class="st">"Summarizing the percent of current census block groups within each HOLC grade"</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>HOLC_percent_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Table summarizing the percent of current census block groups within each HOLC grade</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>HOLC_percent_table <span class="ot">&lt;-</span> <span class="fu">kable</span>(HOLC_percent, <span class="at">caption =</span> <span class="st">"Summarizing the percent of current census block groups within each HOLC grade"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>HOLC_percent_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -351,22 +377,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
-<div class="cell">
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter joined HOLC Grade and EJscreen Census data to relevant variables</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>HOLC_block_filter <span class="ot">&lt;-</span> HOLC_block <span class="sc">%&gt;%</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">filter</span>(grade <span class="sc">==</span> <span class="fu">c</span>(<span class="st">'A'</span>,<span class="st">'B'</span>,<span class="st">'C'</span>,<span class="st">'D'</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">mutate</span>(<span class="at">P_LIFEEXPPCT =</span> <span class="fu">replace_na</span>(P_LIFEEXPPCT,<span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">mutate</span>(<span class="at">LOWINCPCT =</span> (LOWINCPCT<span class="sc">*</span><span class="dv">100</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">select</span>(grade,LOWINCPCT, P_PM25, P_LIFEEXPPCT)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Aggregate mean values of filtered data</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>HOLC_block_filter <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(HOLC_block_filter, <span class="at">by =</span> <span class="fu">list</span>(HOLC_block_filter<span class="sc">$</span>grade),</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>                               <span class="at">FUN =</span> mean) <span class="sc">%&gt;%</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">select</span>(Group<span class="fl">.1</span>, LOWINCPCT, P_PM25, P_LIFEEXPPCT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
+</section>
+<section id="bar-plots" class="level5">
+<h5 class="anchored" data-anchor-id="bar-plots">Bar Plots</h5>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -387,7 +400,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -410,7 +423,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -433,11 +446,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-8-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-9-3.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+</section>
 </section>
 <section id="results-discussion" class="level4">
 <h4 class="anchored" data-anchor-id="results-discussion">Results Discussion</h4>
@@ -446,8 +460,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="part-2-legacy-of-redlining-in-biodiversity-observations" class="level2">
 <h2 class="anchored" data-anchor-id="part-2-legacy-of-redlining-in-biodiversity-observations">Part 2: Legacy of redlining in biodiversity observations</h2>
-<section id="data-processing-1" class="level5">
-<h5 class="anchored" data-anchor-id="data-processing-1">Data Processing</h5>
+<section id="crs-testing-1" class="level5">
+<h5 class="anchored" data-anchor-id="crs-testing-1">CRS Testing</h5>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -457,66 +471,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  bird_observations_fix <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(<span class="at">x =</span> bird_observations, <span class="at">crs =</span> <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>}<span class="cf">else</span>{</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"These CRS are equivalent - proceed to next step."</span>)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check equivalence CRS of HOLC_grade and ejscreen</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">st_crs</span>(bird_observations_fix), <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Make birds_observations_fix valid</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(bird_observations_fix)</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to 2022 observations</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> bird_observations_fix <span class="sc">%&gt;%</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2022</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="filter-and-create-variables-1" class="level5">
+<h5 class="anchored" data-anchor-id="filter-and-create-variables-1">Filter and Create Variables</h5>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check equivalency of the CRS of HOLC_grade and bird observations</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">st_crs</span>(bird_observations_fix), <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Make birds_observations_fix valid</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(bird_observations_fix)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to 2022 observations</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> bird_observations_fix <span class="sc">%&gt;%</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2022</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Df summarizing the percent of bird observations within each HOLC grade</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>HOLC_birds <span class="ot">&lt;-</span> <span class="fu">st_join</span>(bird_observations_fix, HOLC_grade_fix, <span class="at">join =</span> st_intersects, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create df with percentages for each HOLC grade, drop NA as not included in HOLC grading system</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>HOLC_birds_percent <span class="ot">&lt;-</span> HOLC_birds <span class="sc">%&gt;%</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">drop_na</span>(grade) <span class="sc">%&gt;%</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>())  <span class="sc">%&gt;%</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">mutate</span>(<span class="at">percent =</span> (count<span class="sc">/</span><span class="fu">sum</span>(count))<span class="sc">*</span><span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">select</span>(<span class="sc">-</span>count) <span class="sc">%&gt;%</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">st_drop_geometry</span>()</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Check to see if percentages equal 100%</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">sum</span>(HOLC_birds_percent<span class="sc">$</span>percent), <span class="dv">100</span>)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Df of bird observations by count, drop NA as not included in HOLC grading system</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>HOLC_birds_count <span class="ot">&lt;-</span> HOLC_birds <span class="sc">%&gt;%</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">filter</span>(grade <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">st_drop_geometry</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
 <section id="figures-1" class="level4">
 <h4 class="anchored" data-anchor-id="figures-1">Figures</h4>
-<div class="cell">
-<details class="code-fold">
-<summary>Show the code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use if statement and warning to screen CRS of dataframes</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">st_crs</span>(bird_observations) <span class="sc">!=</span> <span class="fu">st_crs</span>(HOLC_grade_fix)){</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">warning</span>(<span class="st">"These CRS are not equivalent! They will be transformed shortly...:"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  bird_observations_fix <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(<span class="at">x =</span> bird_observations, <span class="at">crs =</span> <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>}<span class="cf">else</span>{</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"These CRS are equivalent - proceed to next step."</span>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check equivalence CRS of HOLC_grade and ejscreen</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">st_crs</span>(bird_observations_fix), <span class="fu">st_crs</span>(HOLC_grade_fix))</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Make birds_observations_fix valid</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> <span class="fu">st_make_valid</span>(bird_observations_fix)</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to 2022 observations</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>bird_observations_fix <span class="ot">&lt;-</span> bird_observations_fix <span class="sc">%&gt;%</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2022</span>)</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Df summarizing the percent of bird observations within each HOLC grade</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>HOLC_birds <span class="ot">&lt;-</span> <span class="fu">st_join</span>(bird_observations_fix, HOLC_grade_fix, <span class="at">join =</span> st_intersects, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Create df with percentages for each HOLC grade</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>HOLC_birds_percent <span class="ot">&lt;-</span> HOLC_birds <span class="sc">%&gt;%</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(grade) <span class="sc">%&gt;%</span></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>())  <span class="sc">%&gt;%</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percent =</span> (count<span class="sc">/</span><span class="fu">sum</span>(count))<span class="sc">*</span><span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>count) <span class="sc">%&gt;%</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>()</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Check to see if percentages equal 100%</span></span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(<span class="fu">sum</span>(HOLC_birds_percent<span class="sc">$</span>percent), <span class="dv">100</span>)</span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Df of bird observations by count</span></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>HOLC_birds_count <span class="ot">&lt;-</span> HOLC_birds <span class="sc">%&gt;%</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">filter</span>(grade <span class="sc">!=</span> <span class="st">'NA'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">group_by</span>(grade) <span class="sc">%&gt;%</span></span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">st_drop_geometry</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
+<section id="bar-plot---percentages" class="level5">
+<h5 class="anchored" data-anchor-id="bar-plot---percentages">Bar Plot - Percentages</h5>
 <div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
@@ -538,10 +539,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="HW2_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="HW2_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
+</div>
+</section>
+<section id="table---count" class="level5">
+<h5 class="anchored" data-anchor-id="table---count">Table - Count</h5>
+<div class="cell">
 <details class="code-fold">
 <summary>Show the code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Table</span></span>
@@ -579,6 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
+</section>
 </section>
 <section id="results-discussion-1" class="level4">
 <h4 class="anchored" data-anchor-id="results-discussion-1">Results Discussion</h4>

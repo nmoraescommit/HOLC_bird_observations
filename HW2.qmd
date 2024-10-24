@@ -46,6 +46,7 @@ bird_observations <- sf::read_sf(here::here("data","gbif-birds-LA","gbif-birds-L
 
 #### Data Processing
 
+##### CRS Testing
 ```{r}
 # Use if statement and warning to screen CRS of dataframes
 if(st_crs(HOLC_grade) != st_crs(ejscreen)){
@@ -54,8 +55,12 @@ if(st_crs(HOLC_grade) != st_crs(ejscreen)){
 }else{
   print("These CRS are equivalent - proceed to next step.")
 }
+```
 
-# Check equivalence CRS of HOLC_grade_fix and ejscreen
+
+##### Filter and Create Variables
+```{r}
+# Check equivalency of CRS of HOLC_grade_fix and ejscreen
 expect_equal(st_crs(ejscreen), st_crs(HOLC_grade_fix))
 
 # US states for reference map
@@ -95,7 +100,7 @@ bbox_example <- st_bbox(c(xmin = -13245000,
 #### Maps
 
 ```{r}
-# CA map with reference
+# CA map for reference
 CA_map_ref <- tm_shape(st_as_sfc(st_bbox(california_counties))) +
                 tm_polygons(col = "aliceblue") +
               tm_shape(USA_base) +
@@ -119,6 +124,7 @@ CA_map_ref <- tm_shape(st_as_sfc(st_bbox(california_counties))) +
               
 CA_map_ref
 ```
+
 
 ```{r}
 # Color HOLC grade
@@ -156,32 +162,18 @@ HOLC_map
 #### Figures
 
 ```{r}
-# Table summarizing the percent of current census block groups within each HOLC grade
+# Join df of LA census blocks as well as HOLC areas
 HOLC_block <- st_join(LA_base, HOLC_grade_fix, join = st_intersects, left = FALSE)
 
-# Create table with percentages for each HOLC grade
+# Create df with percentages for each HOLC grade, drop NA as not included in HOLC grading system
 HOLC_percent <- HOLC_block %>%
-  group_by(grade) %>%
-  drop_na(grade) %>%
-  summarise(count = n())  %>%
-  mutate(percent = (count/sum(count))*100) %>%
-  select(-count) %>%
-  st_drop_geometry()
+                group_by(grade) %>%
+                drop_na(grade) %>%
+                summarise(count = n())  %>%
+                mutate(percent = (count/sum(count))*100) %>%
+                select(-count) %>%
+                st_drop_geometry()
 
-# Check to see if percentages equal 100%
-if((expect_equal(sum(HOLC_percent$percent),100) == 100)){
-  print("These percentages are good to go! They add up to 100%")
-}else{
-  stop("Double check percentages! These do not add up to 100%.")
-}
-
-# Table
-HOLC_percent_table <- kable(HOLC_percent, caption = "Summarizing the percent of current census block groups within each HOLC grade")
-
-HOLC_percent_table
-```
-
-```{r}
 # Filter joined HOLC Grade and EJscreen Census data to relevant variables
 HOLC_block_filter <- HOLC_block %>%
                   filter(grade == c('A','B','C','D')) %>%
@@ -193,7 +185,25 @@ HOLC_block_filter <- HOLC_block %>%
 HOLC_block_filter <- aggregate(HOLC_block_filter, by = list(HOLC_block_filter$grade),
                                FUN = mean) %>%
                     select(Group.1, LOWINCPCT, P_PM25, P_LIFEEXPPCT)
+
+# Check to see if percentages equal 100%
+if((expect_equal(sum(HOLC_percent$percent),100) == 100)){
+  print("These percentages are good to go! They add up to 100%")
+}else{
+  stop("Double check percentages! These do not add up to 100%.")
+}
 ```
+
+##### Table
+
+```{r}
+# Table summarizing the percent of current census block groups within each HOLC grade
+HOLC_percent_table <- kable(HOLC_percent, caption = "Summarizing the percent of current census block groups within each HOLC grade")
+
+HOLC_percent_table
+```
+
+##### Bar Plots
 
 ```{r}
 # Create low income % bar plot
@@ -245,7 +255,7 @@ Through the data analysis, exploration and visualization for the means of the pe
 
 ## Part 2: Legacy of redlining in biodiversity observations
 
-##### Data Processing
+##### CRS Testing
 
 ```{r}
 # Use if statement and warning to screen CRS of dataframes
@@ -255,31 +265,13 @@ if(st_crs(bird_observations) != st_crs(HOLC_grade_fix)){
 }else{
   print("These CRS are equivalent - proceed to next step.")
 }
-
-# Check equivalence CRS of HOLC_grade and ejscreen
-expect_equal(st_crs(bird_observations_fix), st_crs(HOLC_grade_fix))
-
-# Make birds_observations_fix valid
-bird_observations_fix <- st_make_valid(bird_observations_fix)
-
-# Filter to 2022 observations
-bird_observations_fix <- bird_observations_fix %>%
-                        filter(year == 2022)
 ```
 
-#### Figures
+
+##### Filter and Create Variables
 
 ```{r}
-
-# Use if statement and warning to screen CRS of dataframes
-if(st_crs(bird_observations) != st_crs(HOLC_grade_fix)){
-  warning("These CRS are not equivalent! They will be transformed shortly...:")
-  bird_observations_fix <- st_transform(x = bird_observations, crs = st_crs(HOLC_grade_fix))
-}else{
-  print("These CRS are equivalent - proceed to next step.")
-}
-
-# Check equivalence CRS of HOLC_grade and ejscreen
+# Check equivalency of the CRS of HOLC_grade and bird observations
 expect_equal(st_crs(bird_observations_fix), st_crs(HOLC_grade_fix))
 
 # Make birds_observations_fix valid
@@ -292,25 +284,29 @@ bird_observations_fix <- bird_observations_fix %>%
 # Df summarizing the percent of bird observations within each HOLC grade
 HOLC_birds <- st_join(bird_observations_fix, HOLC_grade_fix, join = st_intersects, left = FALSE)
 
-# Create df with percentages for each HOLC grade
+# Create df with percentages for each HOLC grade, drop NA as not included in HOLC grading system
 HOLC_birds_percent <- HOLC_birds %>%
-  group_by(grade) %>%
-  drop_na(grade) %>%
-  summarise(count = n())  %>%
-  mutate(percent = (count/sum(count))*100) %>%
-  select(-count) %>%
-  st_drop_geometry()
+                        group_by(grade) %>%
+                        drop_na(grade) %>%
+                        summarise(count = n())  %>%
+                        mutate(percent = (count/sum(count))*100) %>%
+                        select(-count) %>%
+                        st_drop_geometry()
 
 # Check to see if percentages equal 100%
 expect_equal(sum(HOLC_birds_percent$percent), 100)
 
-# Df of bird observations by count
+# Df of bird observations by count, drop NA as not included in HOLC grading system
 HOLC_birds_count <- HOLC_birds %>%
                       filter(grade != 'NA') %>%
                       group_by(grade) %>%
                       summarise(count = n()) %>%
                       st_drop_geometry()
 ```
+
+#### Figures
+
+##### Bar Plot - Percentages
 
 ```{r}
 # Bar plot - Bird Observations by Percent
@@ -327,7 +323,11 @@ birds_bar <- ggplot(data = HOLC_birds_percent, aes(x = grade, y = percent)) +
   theme(plot.title = element_text(size = 12, face = 'bold'))
 
 birds_bar
+```
 
+##### Table - Count
+
+```{r}
 # Table
 HOLC_birds_percent_table <- kable(HOLC_birds_count, caption = "Summarizing the count of observations within redlined neighborhoods within each HOLC grade (2022)")
 
@@ -341,7 +341,7 @@ From the table and visualized bar plot above, we notice that there are the highe
 ## Citations
 
 | Data                                                             | Citations                                                                                                                                                          | URL                                                   |
-|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+|------------------------|------------------------|------------------------|
 | EJScreen Technical Documentation                                 | U.S. Environmental Protection Agency (EPA), 2023. EJScreen Technical Documentation.                                                                                |                                                       |
 | EJScreen Data                                                    | U.S. Environmental Protection Agency (EPA). (2024, August 6). Download EJScreen Data. US EPA.                                                                      | <https://www.epa.gov/ejscreen/download-ejscreen-data> |
 | HOLC Redlining Data                                              | Nelson, R. K., Winling, L, et al. (2023). Mapping Inequality: Redlining in New Deal America. Digital Scholarship Lab. https://dsl.richmond.edu/panorama/redlining. | <https://dsl.richmond.edu/panorama/redlining/data>    |
