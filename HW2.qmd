@@ -47,6 +47,7 @@ bird_observations <- sf::read_sf(here::here("data","gbif-birds-LA","gbif-birds-L
 #### Data Processing
 
 ##### CRS Testing
+
 ```{r}
 # Use if statement and warning to screen CRS of dataframes
 if(st_crs(HOLC_grade) != st_crs(ejscreen)){
@@ -57,8 +58,8 @@ if(st_crs(HOLC_grade) != st_crs(ejscreen)){
 }
 ```
 
-
 ##### Filter and Create Variables
+
 ```{r}
 # Check equivalency of CRS of HOLC_grade_fix and ejscreen
 expect_equal(st_crs(ejscreen), st_crs(HOLC_grade_fix))
@@ -124,7 +125,6 @@ CA_map_ref <- tm_shape(st_as_sfc(st_bbox(california_counties))) +
               
 CA_map_ref
 ```
-
 
 ```{r}
 # Color HOLC grade
@@ -267,7 +267,6 @@ if(st_crs(bird_observations) != st_crs(HOLC_grade_fix)){
 }
 ```
 
-
 ##### Filter and Create Variables
 
 ```{r}
@@ -341,7 +340,7 @@ From the table and visualized bar plot above, we notice that there are the highe
 ## Citations
 
 | Data                                                             | Citations                                                                                                                                                          | URL                                                   |
-|------------------------|------------------------|------------------------|
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
 | EJScreen Technical Documentation                                 | U.S. Environmental Protection Agency (EPA), 2023. EJScreen Technical Documentation.                                                                                |                                                       |
 | EJScreen Data                                                    | U.S. Environmental Protection Agency (EPA). (2024, August 6). Download EJScreen Data. US EPA.                                                                      | <https://www.epa.gov/ejscreen/download-ejscreen-data> |
 | HOLC Redlining Data                                              | Nelson, R. K., Winling, L, et al. (2023). Mapping Inequality: Redlining in New Deal America. Digital Scholarship Lab. https://dsl.richmond.edu/panorama/redlining. | <https://dsl.richmond.edu/panorama/redlining/data>    |
