@@ -2,8 +2,12 @@
 
 ## Purpose
 
+SKILLS LEARNED HERE
+
 ## Repository Structure
 
 ## Data Access
 
 ## References
+
+CHANGE HW2.QMD NAME!!!!!
