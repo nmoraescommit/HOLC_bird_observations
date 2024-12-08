@@ -4,6 +4,13 @@
 
 The purpose of this project is to understand the impacts of racial segregation and how it can shape environmental data through the visualization of historical redlining overlaid with bird observation data. The redlining grades were created bu the 1930's Home Owners' Loan Corporation, and were discriminatory towards BIPOC. 
 
+## Highlights
+
+- Map creation
+- Manipulating and visulizing raster data
+- Professionalgeospatial workflow and output
+
+
 ## Repository Structure
 
 The folder structure for this repository is a data folder, the `HOLC_Birds.qmd` quarto document, a README.md, and a .gitignore. The data folder is placed within the .gitignore, and contains folders for the ejscreen geospatial data, bird observation data, and the HOLC redlining data. The repository also contains the rendered files of the quarto doc.
